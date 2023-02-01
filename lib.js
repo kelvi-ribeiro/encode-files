@@ -5,6 +5,8 @@ const util = require('util');
 var os = require("os");
 const currentDate = new Date();
 const { Timer } = require('timer-node');
+var aes = require("crypto-js/aes");
+var encUtf8 = require("crypto-js/enc-utf8");
 
 async function throughDirectory(directory, files) {
     const items = await fs.readdir(directory);
@@ -37,9 +39,9 @@ function getCompleteFilePath(file) {
                         return d;
                     }
                     if (process.env.ENCODE_OR_DECODE === "ENCODE") {
-                        return hash(d);
+                        return encode(d);
                     }
-                    return unhash(d);
+                    return decode(d);
                 }).join(path.sep));
 }
 
@@ -54,10 +56,18 @@ async function createDirectoryIfDoesNotExists(directoryName) {
 }
 
 function hash(content) {
-    return Buffer.from(content).toString("base64")
+    return aes.encrypt(content, process.env.SECRET_KEY_TO_HASH).toString();
 }
 
 function unhash(content) {
+    return aes.decrypt(content, process.env.SECRET_KEY_TO_HASH).toString(encUtf8);
+}
+
+function encode(content) {
+    return Buffer.from(content).toString("base64")
+}
+
+function decode(content) {
     return Buffer.from(content, "base64").toString("ascii")
 }
 
@@ -68,7 +78,6 @@ console.log = function (content) {
     fs.appendFile(`${directoryName}${path.sep}debug-${currentDate.getTime()}.log`, logContent, { flags: 'w' })
     process.stdout.write(logContent)
 };
-
 
 function removeAllIgnoredFiles(files) {
     console.log("files or folder to ignore: " + process.env.IGNORED_FILES_OR_FOLDERS);
@@ -94,7 +103,6 @@ async function copyAllFiles() {
         const filename = path.basename(filePath);
         console.log(`Starting to copy the file: '${filename}'`);
         const directoryName = path.dirname(filePath);
-
         await createDirectoryIfDoesNotExists(directoryName);
         await fs.writeFile(filePath, fileContentToSave);
     }
