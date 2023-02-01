@@ -25,12 +25,22 @@ async function getFileContent(filename) {
 
 async function getContentToSave(fileContent) {
     return process.env.ENCODE_OR_DECODE === "ENCODE"
-        ? Buffer.from(fileContent).toString("base64")
-        : Buffer.from(fileContent, "base64").toString("ascii");
+        ? hash(fileContent)
+        : unhash(fileContent);
 }
 
 function getCompleteFilePath(file) {
-    return path.join(process.env.FOLTER_PATH_TO_PASTE, file.replace(process.env.FOLDER_PATH_BASE_TO_IGNORE_ON_PASTE, ""));
+    return path
+                .join(process.env.FOLTER_PATH_TO_PASTE, file.replace(process.env.FOLDER_PATH_BASE_TO_IGNORE_ON_PASTE, "")
+                .split(path.sep).map(d => {
+                    if(process.env.FOLTER_PATH_TO_PASTE.split(path.sep).includes(d)){
+                        return d;
+                    }
+                    if (process.env.ENCODE_OR_DECODE === "ENCODE") {
+                        return hash(d);
+                    }
+                    return unhash(d);
+                }).join(path.sep));
 }
 
 async function createDirectoryIfDoesNotExists(directoryName) {
@@ -41,6 +51,14 @@ async function createDirectoryIfDoesNotExists(directoryName) {
             throw error;
         }
     }
+}
+
+function hash(content) {
+    return Buffer.from(content).toString("base64")
+}
+
+function unhash(content) {
+    return Buffer.from(content, "base64").toString("ascii")
 }
 
 console.log = function (content) {
@@ -75,7 +93,8 @@ async function copyAllFiles() {
         const filePath = getCompleteFilePath(file);
         const filename = path.basename(filePath);
         console.log(`Starting to copy the file: '${filename}'`);
-        const directoryName = path.dirname(filePath)
+        const directoryName = path.dirname(filePath);
+
         await createDirectoryIfDoesNotExists(directoryName);
         await fs.writeFile(filePath, fileContentToSave);
     }
