@@ -1,7 +1,8 @@
 const { promises: fs } = require("fs");
 const path = require("path");
 require("dotenv").config();
-
+const util = require('util');
+var os = require("os");
 
 async function throughDirectory(directory, files) {
     const items = await fs.readdir(directory);
@@ -39,6 +40,14 @@ async function createDirectoryIfDoesNotExists(directoryName) {
         }
     }
 }
+
+console.log = function (content) {
+    const logContent = util.format(content) + os.EOL;
+    const directoryName = `${__dirname}${path.sep}debug`
+    createDirectoryIfDoesNotExists(directoryName)
+    fs.appendFile(`${directoryName}${path.sep}debug-${currentDate.getTime()}.log`, logContent, { flags: 'w' })
+    process.stdout.write(logContent)
+};
 
 
 function removeAllIgnoredFiles(files) {
