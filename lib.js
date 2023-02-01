@@ -3,6 +3,8 @@ const path = require("path");
 require("dotenv").config();
 const util = require('util');
 var os = require("os");
+const currentDate = new Date();
+const { Timer } = require('timer-node');
 
 async function throughDirectory(directory, files) {
     const items = await fs.readdir(directory);
@@ -57,6 +59,9 @@ function removeAllIgnoredFiles(files) {
 }
 
 async function copyAllFiles() {
+    const timer = new Timer()
+    timer.start()
+    console.log("Starting copying all files")
     const allFiles = [];
     await throughDirectory(process.env.FOLDER_PATH_TO_COPY, allFiles);
     console.log(`${allFiles.length} were found in total`);
@@ -74,6 +79,7 @@ async function copyAllFiles() {
         await createDirectoryIfDoesNotExists(directoryName);
         await fs.writeFile(filePath, fileContentToSave);
     }
+    console.log(`Files copied in ${Math.floor(timer.ms() / 1000)} seconds.`)
 }
 
 module.exports = {
