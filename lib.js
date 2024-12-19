@@ -33,7 +33,7 @@ async function getContentToSave(fileContent) {
 
 function getCompleteFilePath(file) {
     return path
-                .join(process.env.FOLTER_PATH_TO_PASTE, file.replace(process.env.FOLDER_PATH_BASE_TO_IGNORE_ON_PASTE, "")
+                .join(process.env.FOLTER_PATH_TO_PASTE, file.replace(process.env.FOLDER_PATH_TO_COPY, "")
                 .split(path.sep).map(d => {
                     if(process.env.FOLTER_PATH_TO_PASTE.split(path.sep).includes(d)){
                         return d;
